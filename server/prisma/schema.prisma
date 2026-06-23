@@ -1,0 +1,29 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Product {
+  id        String   @id @default(uuid()) // Using UUID for robust unique IDs
+  name      String
+  category  String
+  price     Decimal  @db.Decimal(10, 2)   // Decimal is better than Float for currency precision
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("products") // Maps the model to a lowercase table name in PostgreSQL
+
+  // CRUCIAL FOR PERFORMANCE:
+  // This composite index allows Postgres to filter by category, 
+  // sort by newest first, and break ties using ID without scanning the table.
+  @@index([category, createdAt(sort: Desc), id(sort: Desc)], name: "idx_category_created_at_id")
+}
